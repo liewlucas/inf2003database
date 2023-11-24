@@ -1,0 +1,110 @@
+/* Styling for the AddPost component */
+
+/* Example styles - Modify and add your styles */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 40px 40px 40px; /* Changed padding to 50px */
+  }
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+    width: 500px;
+    padding: 20px; /* Changed padding to 50px */
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    gap: 10px; /* Add some space between the buttons */
+  }
+  
+  .form input,
+  .form select {
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .form button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .form button:hover {
+    background-color: #0056b3;
+  }
+  
+
+/* Style for the form buttons */
+  /* Style for the Save button */
+  .form button.save {
+    background-color: #4caf50; /* Change background color for Save button */
+    color: white; /* Change text color for Save button */
+  }
+  
+  /* Style for the Cancel button */
+  .form button.cancel {
+    background-color: #007bff; /* Change background color for Cancel button */
+    color: white; /* Change text color for Cancel button */
+  }
+  
+
+  /* Styles for labels */
+.form label {
+    margin-bottom: 6px;
+    font-weight: bold;
+  }
+
+
+  /* AddPost.css */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  th, td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+  }
+  
+  th {
+    background-color: #f2f2f2;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  button {
+    padding: 6px 10px;
+    margin-right: 5px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+  }
+  
+
+  /* Style for the Edit button */
+table button.edit {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  /* Style for the Delete button */
+  table button.delete {
+    background-color: #f44336;
+    color: white;
+  }
