@@ -26,6 +26,27 @@
   justify-content: center;
 }
 
+/* Add this style to set the color of the words to white */
+.rightSide a {
+  color: white;
+}
+
+/* Add this style to set the color of the icon to white */
+.rightSide svg {
+  color: white;
+  width: 30px;
+}
+
+
+.email
+{
+  color:white;
+  vertical-align: middle; /* or use line-height: 2; or any other suitable value */
+  margin-left: 5px; /* Add some margin for spacing */
+  display: flex;
+  align-items: center;
+}
+
 .navbar a {
   color: white;
   text-decoration: none;

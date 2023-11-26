@@ -85,9 +85,9 @@ app.post('/api/register', async (req, res) => {
     }
 
     // Calculate the new userId by incrementing the latest userId
-    let newUserId = latestUser.length === 0 ? 1 : latestUser[0].userId + 1;
-    newUserId = Math.max(newUserId, 1);
-    // newUserId = latestUser.length === 0 ? 1 : parseInt(latestUser[0].userId) + 1;
+    // let newUserId = latestUser.length === 0 ? 1 : latestUser[0].userId + 1;
+    // newUserId = Math.max(newUserId, 1);
+    // // newUserId = latestUser.length === 0 ? 1 : parseInt(latestUser[0].userId) + 1;
 
     // // Ensure newUserId is not less than 1
     // newUserId = Math.max(newUserId, 1);
@@ -152,31 +152,58 @@ app.post('/api/register', async (req, res) => {
 // });
 
 
-
-
 // New endpoint to get user details
 app.get('/api/getuserdetails', verifyToken, async (req, res) => {
+  const { userid } = req.query;
+
   try {
-    await client.connect();
-    const db = client.db('inf2003');
+    // Connect to MongoDB
+    await mongoClient.connect();
+    
+    const db = mongoClient.db('inf2003');
     const collection = db.collection('user');
 
-    // Fetch user details from the database using the userId from the token
-    const userDetails = await collection.findOne({ _id: req.user.userId });
+    // Check if the user with the provided userid exists
+    const existingUser = await collection.findOne({ userid: userid });
 
-    if (userDetails) {
-      // Send the user details to the client
-      res.json({ success: true, userDetails });
-    } else {
-      res.status(404).json({ success: false, message: 'User details not found' });
+    if (!existingUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
+
+    console.log(existingUser);
+
+    // Send the user details to the client
+    res.json({ success: true, userDetails: existingUser });
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('MongoDB operation error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   } finally {
-    await client.close();
+    // Close the MongoDB connection
+    await mongoClient.close();
   }
 });
+
+  // try {
+  //   await client.connect();
+  //   const db = client.db('inf2003');
+  //   const collection = db.collection('user');
+
+  //   // Fetch user details from the database using the userId from the token
+  //   const userDetails = await collection.findOne({ _id: req.user.userId });
+
+  //   if (userDetails) {
+  //     // Send the user details to the client
+  //     res.json({ success: true, userDetails });
+  //   } else {
+  //     res.status(404).json({ success: false, message: 'User details not found' });
+  //   }
+  // } catch (error) {
+  //   console.error('MongoDB connection error:', error);
+  //   res.status(500).json({ success: false, message: 'Internal server error' });
+  // } finally {
+  //   await client.close();
+  // }
+
 
 // Login endpoint
 app.post('/api/login', async (req, res) => {
