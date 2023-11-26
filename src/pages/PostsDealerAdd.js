@@ -1,23 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/PostsDealer.css';
 import { useNavigate } from 'react-router-dom';
-// useEffect(() => {
-//   const fetchCarModels = async () => {
-//     try {
-//       const response = await fetch('http://localhost:3001/api/car-models');
-//       if (response.ok) {
-//         const carModels = await response.json();
-//         setCarModels(carModels);
-//       } else {
-//         console.error('Failed to fetch car models');
-//       }
-//     } catch (error) {
-//       console.error('Error fetching car models:', error);
-//     }
-//   };
 
-//   fetchCarModels();
-// }, []);
+
 function AddPost() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
@@ -26,7 +11,43 @@ function AddPost() {
   const [price, setPrice] = useState('');
   const [model, setModel] = useState('');
   const [editIndex, setEditIndex] = useState(-1);
+  const [carModels, setCarModels] = useState([]);
+  const [modelNames, setModelNames] = useState([]);
+  useEffect(() => {
+    const fetchCarModels = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/carmodels');
+        if (response.ok) {
+          const responseData = await response.json();
 
+          // Check if carModels is an array before using map
+          if (Array.isArray(responseData.carModels)) {
+            const cmIDs = responseData.carModels.map((carModel) => carModel.cmID);
+            const names = responseData.carModels.map((carModel) => carModel.modelName);
+
+            console.log('CMIDs:', cmIDs);
+            console.log('Model Names:', names);
+
+            setCarModels(cmIDs);
+            setModelNames(names); // Add this line to set model names in the state
+          } else {
+            console.error('Car models is not an array:', responseData.carModels);
+          }
+        } else {
+          console.error('Failed to fetch car models');
+        }
+      } catch (error) {
+        console.error('Error fetching car models:', error);
+      }
+    };
+
+    fetchCarModels();
+  }, []);
+  
+  
+  
+  
+  
   const addNewPost = async () => {
     if (
       postTitle.trim() !== '' &&
@@ -158,20 +179,19 @@ function AddPost() {
           onChange={(e) => setPrice(e.target.value)}
         />
         <label htmlFor="model">Model:</label>
-        <select id="model" value={model} onChange={(e) => setModel(e.target.value)}>
+        <select id="model" value={model} onChange={(e) => setModel(parseInt(e.target.value, 10))}>
           <option value="">Select Model</option>
-          <option value="19371">19371</option>
-          <option value="19188">19188</option>
-          <option value="19133">19133</option>
-        </select>
-        {/* <select id="model" value={model} onChange={(e) => setModel(e.target.value)}>
-          <option value="">Select Model</option>
-          {carModels.map((carModel) => (
-            <option key={carModel.id} value={carModel.id}>
-              {carModel.name}
+          {carModels.map((cmID, index) => (
+            <option key={index} value={cmID}>
+              {modelNames[index]}
             </option>
           ))}
-        </select> */}
+        </select>
+
+
+
+
+
         
         {editIndex !== -1 ? (
         <>
