@@ -223,6 +223,77 @@ app.get('/api/post', async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
 });
+app.put('/api/posts/:postId', async (req, res) => {
+  const postId = req.params.postId;
+  const { postTitle, cmID, postDate, price, quantity } = req.body;
+
+  try {
+    console.log('Decoded Token Payload:', req.user);
+    // If authentication is not required, you can handle the dealerID in a different way
+    const dealerID = 2299;
+
+    // Create an updated post object
+    const updatedPost = {
+      postTitle,
+      cmID,
+      postDate,
+      price,
+      quantity,
+      dealerID,
+    };
+
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+
+    try {
+      // Update the post in the database
+      const [result] = await connection.query(
+        'UPDATE post SET postTitle=?, cmID=?, postDate=?, price=?, quantity=?, dealerID=? WHERE postID=?',
+        [updatedPost.postTitle, updatedPost.cmID, updatedPost.postDate, updatedPost.price, updatedPost.quantity, updatedPost.dealerID, postId]
+      );
+
+      if (result.affectedRows > 0) {
+        res.status(200).json({ success: true, message: 'Post updated successfully' });
+      } else {
+        res.status(404).json({ success: false, message: 'Post not found' });
+      }
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
+// Delete post endpoint
+app.delete('/api/posts/:postId', async (req, res) => {
+  const postId = req.params.postId;
+
+  try {
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+
+    try {
+      // Delete the post from the database
+      const [result] = await connection.query('DELETE FROM post WHERE postID = ?', [postId]);
+
+      if (result.affectedRows > 0) {
+        res.status(200).json({ success: true, message: 'Post deleted successfully' });
+      } else {
+        res.status(404).json({ success: false, message: 'Post not found' });
+      }
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
 
 // Create new post endpoint
 app.post('/api/posts', async (req, res) => {
@@ -260,6 +331,98 @@ app.post('/api/posts', async (req, res) => {
   } catch (error) {
     console.error('Error:', error);
 
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
+
+app.get('/api/post/:dealerID', async (req, res) => {
+  try {
+    // Get cmID from the route parameters
+    const dealerID = 2299;
+
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+
+    try {
+      // Fetch the posts based on cmID from the database
+      const [rows] = await connection.query('SELECT * FROM post WHERE dealerID = ?', [dealerID]);
+
+      // Send the posts as a JSON response
+      res.status(200).json({ success: true, data: rows });
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
+
+
+app.get('/api/totalSalesByRegion', async (req, res) => {
+  try {
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+ 
+    try {
+      // Execute the top models query
+      const [rows] = await connection.query(`
+      SELECT
+      dealer.region,
+      COUNT(carsales.csID) AS totalSales
+    FROM
+      inf2003.carsales
+    JOIN
+      inf2003.post ON carsales.postID = post.postID
+    JOIN
+      inf2003.carmodel ON post.cmID = carmodel.cmID
+    JOIN
+      inf2003.dealer ON dealer.dealerID = post.dealerID
+    GROUP BY
+      dealer.region
+    ORDER BY
+      totalSales DESC;
+      `);
+ 
+      // Send the result as a JSON response
+      res.status(200).json({ success: true, totalSalesByRegion: rows });
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+ 
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
+
+app.get('/api/minavgmax', async (req, res) => {
+  try {
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+ 
+    try {
+      // Execute the top models query
+      const [rows] = await connection.query(`
+      SELECT MIN(price) AS min_price, AVG(price) AS avg_price, MAX(price) AS max_price
+      FROM inf2003.carsales
+      JOIN inf2003.post ON carsales.postID = post.postID
+      JOIN inf2003.carmodel ON carmodel.cmID = post.postID
+      LIMIT 1;
+      `);
+ 
+      // Send the result as a JSON response
+      res.status(200).json({ success: true, minavgmax: rows });
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+ 
     // Send a JSON error response
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
