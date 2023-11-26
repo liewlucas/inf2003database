@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../helpers/AuthContext'; // Import the useAuth hook
+import { useAuth } from '../helpers/AuthContext';
 
 const Profile = () => {
   const [userDetails, setUserDetails] = useState({});
   const [loading, setLoading] = useState(true);
+  const { token, logout } = useAuth();
   const navigate = useNavigate();
-  const { logout } = useAuth(); // Use the useAuth hook to get the logout function
 
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const token = localStorage.getItem('token');
         if (!token) {
           throw new Error('User not authenticated');
         }
 
-        // Fetch user details from the server using the token
         const response = await axios.get('http://localhost:3001/api/getuserdetails', {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -29,16 +27,19 @@ const Profile = () => {
       } catch (error) {
         console.error('Error fetching user details:', error);
         setLoading(false);
+
+        // If unauthorized, redirect to the login page
+        if (error.response && error.response.status === 401) {
+          navigate('/Login');
+        }
       }
     };
 
     fetchUserDetails();
-  }, []);
+  }, [token, navigate]);
 
   const handleLogout = () => {
-    // Clear the token from local storage
-    logout(); // Use the logout function from the useAuth hook
-    // Redirect to the login page
+    logout();
     navigate('/Login');
   };
 

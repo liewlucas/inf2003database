@@ -33,7 +33,7 @@ function Navbar() {
       <div className="rightSide">
         <Link to="/"> Home </Link>
         {!isLoggedIn && <Link to="/Login"> Login </Link>}
-        <Link to="/Posts"> Posts </Link>
+        {!isLoggedIn && <Link to="/Posts"> Posts </Link>}
         {isLoggedIn && <Link to="/PostsDealerAdd"> Add Post </Link>}
         {isLoggedIn && <Link to="/PostsDealer"> Post Dealer </Link>}
         {!isLoggedIn && <Link to="/Register"> Register </Link>}
