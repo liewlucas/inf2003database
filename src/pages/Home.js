@@ -1,39 +1,72 @@
-import React from 'react';
-import { useState } from "react";
-import BarChart from "../Components/BarChart";
-import LineChart from '../Components/LineChart';
-import {UserData} from "../Data";
+import React, { useState, useEffect } from 'react';
 
 function Home() {
-    const [userData, setUserData] = useState({
-        labels: UserData.map((data) => data.year),
-        datasets: [
-          {
-            label: "Users Gained",
-            data: UserData.map((data) => data.userGain),
-            backgroundColor: [
-              "rgba(75,192,192,1)",
-              "#ecf0f1",
-              "#50AF95",
-              "#f3ba2f",
-              "#2a71d0",
-            ],
-            borderColor: "black",
-            borderWidth: 2,
-          },
-        ],
+  const [topCarModelsData, setTopCarModelsData] = useState([]);
+
+  useEffect(() => {
+    // Fetch data from the server
+    fetch('http://localhost:3001/api/topmodels')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          setTopCarModelsData(data.topModels);
+        } else {
+          console.error('Error:', data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
       });
+  }, []); // Empty dependency array means this effect runs once when the component mounts
 
   return (
-    <div className="App">
-      <div style={{ width: 700 }}>
-        <BarChart chartData={userData} />
-      </div>
-      <div style={{ width: 700 }}>
-        <LineChart chartData={userData} />
-      </div>
+    <div className="container">
+      <h1>Dashboard</h1>
+      <table>
+        <caption>Top 5 Best Selling Car</caption>
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>Car Model</th>
+            <th>Amount Sold</th>
+          </tr>
+        </thead>
+        <tbody>
+          {topCarModelsData.map((item, index) => (
+            <tr key={index}>
+              <td>{index + 1}</td>
+              <td>{item.modelName}</td>
+              <td>{item.totalSales}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* The second table remains unchanged */}
+      <table>
+        <caption>Top 5 Dealer Company</caption>
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>Dealer</th>
+            <th>Total Sales</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Lucas</td>
+            <td>10</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Zexi</td>
+            <td>8</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-  )
+  );
 }
 
-export default Home
+export default Home;
