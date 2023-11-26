@@ -137,11 +137,11 @@ app.get('/api/post', async (req, res) => {
     const connection = await pool.getConnection();
 
     try {
-      // Fetch all car models from the database
-      const [rows] = await connection.query('SELECT * FROM post');
+      // Fetch the latest 100 posts from the database
+      const [rows] = await connection.query('SELECT * FROM post ORDER BY postDate DESC LIMIT 100');
 
-      // Send the car models as a JSON response
-      res.status(200).json({ success: true, carModels: rows });
+      // Send the posts as a JSON response
+      res.status(200).json({ success: true, data: rows });
     } finally {
       connection.release(); // Release the connection back to the pool
     }
@@ -152,6 +152,7 @@ app.get('/api/post', async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
 });
+
 // Create new post endpoint
 app.post('/api/posts', async (req, res) => {
   const { postTitle, cmID, postDate, price, quantity } = req.body;

@@ -203,37 +203,7 @@ function AddPost() {
         )}
       </div>
 
-        {/* Render the PostTable component */}
-        {/* <PostsDealer posts={posts} /> */}
-      {/* <PostsDealer posts={posts} startEditing={startEditing} deletePost={deletePost} /> */}
-
-      {/* <table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Car Model</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th>Model</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {posts.map((post, index) => (
-            <tr key={index}>
-              <td>{post.title}</td>
-              <td>{post.carModel}</td>
-              <td>{post.quantity}</td>
-              <td>{post.price}</td>
-              <td>{post.model}</td>
-              <td>
-                <button className="edit" onClick={() => startEditing(index)}>Edit</button>
-                <button className="delete" onClick={() => deletePost(index)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table> */}
+   
 
 
     </div>
