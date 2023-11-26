@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 
 function Home() {
   const [topCarModelsData, setTopCarModelsData] = useState([]);
+  const [topCardealerData, setTopCardealerData] = useState([]);
+
 
   useEffect(() => {
     // Fetch data from the server
@@ -18,6 +20,22 @@ function Home() {
         console.error('Error:', error);
       });
   }, []); // Empty dependency array means this effect runs once when the component mounts
+
+  useEffect(() => {
+    // Fetch data from the server
+    fetch('http://localhost:3001/api/topdealers')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          setTopCardealerData(data.topdealers);
+        } else {
+          console.error('Error:', data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }, []);
 
   return (
     <div className="container">
@@ -53,16 +71,13 @@ function Home() {
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>Lucas</td>
-            <td>10</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Zexi</td>
-            <td>8</td>
-          </tr>
+          {topCardealerData.map((item, index) => (
+            <tr key={index}>
+              <td>{index + 1}</td>
+              <td>{item.name}</td>
+              <td>{item.Total}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

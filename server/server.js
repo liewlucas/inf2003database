@@ -236,6 +236,62 @@ app.post('/api/posts', async (req, res) => {
   }
 });
 
+app.get('/api/topmodels', async (req, res) => {
+  try {
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+ 
+    try {
+      // Execute the top models query
+      const [rows] = await connection.query(`
+        SELECT carmodel.cmID, carmodel.modelName, SUM(quantity) as totalSales
+        FROM carsales
+        JOIN post ON carsales.postID = post.postID
+        JOIN carmodel ON post.cmID = carmodel.cmID
+        GROUP BY carmodel.cmID, carmodel.modelName
+        ORDER BY totalSales DESC
+        LIMIT 5
+      `);
+ 
+      // Send the result as a JSON response
+      res.status(200).json({ success: true, topModels: rows });
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+ 
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
+
+app.get('/api/topdealers', async (req, res) => {
+  try {
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+ 
+    try {
+      // Execute the top models query
+      const [rows] = await connection.query(`
+      select d.dealerName as name, sum(price) as Total from inf2003.dealer d
+      inner join inf2003.post p on p.dealerID = d.dealerID
+      inner join inf2003.carsales s on s.postID = p.postID
+      group by Price,name limit 5;
+      `);
+ 
+      // Send the result as a JSON response
+      res.status(200).json({ success: true, topdealers: rows });
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+ 
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
 
 
 app.listen(PORT, () => {
