@@ -34,6 +34,36 @@ const hashPassword = (password) => {
   return hash.digest('hex');
 };
 
+app.post('/api/addhistory', async (req, res) => {
+  const { userid, viewed_history } = req.body;
+
+  try {
+    await mongoClient.connect();
+    const db = mongoClient.db('inf2003');
+    const collection = db.collection('user');
+
+    // Check if the user with the provided userid exists
+    const existingUser = await collection.findOne({ userid: userid });
+
+    if (!existingUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Add or update the viewed_history field
+    await collection.updateOne(
+      { userid: userid },
+      { $set: { viewed_history } },
+    );
+
+    res.json({ success: true, message: 'Viewed history added successfully' });
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  } finally {
+    await mongoClient.close();
+  }
+});
+
 // Registration endpoint
 app.post('/api/register', async (req, res) => {
   const { email, password, hashKey, type, user_info } = req.body;
@@ -50,7 +80,7 @@ app.post('/api/register', async (req, res) => {
     console.log('latestuser:', latestUser);
 
     if (latestUser.length > 0) {
-      newUserId = latestUser[0].userid+1;
+      newUserId = latestUser[0].userid + 1;
       console.log("Latest UserId:  ", newUserId)
     }
 
@@ -168,21 +198,19 @@ app.post('/api/login', async (req, res) => {
       console.log("User Type: ", type)
       console.log("User Info: ", user_info)
 
-      if(type == "dealer")
-      {
+      if (type == "dealer") {
         console.log("DEALER HAVE BEEN DETECTED")
-         // Include 'type' and 'user_info.Dealer_id' in the token payload
-         tokenPayload = { email: user.email, userId: user.userid, type, dealerId: user_info?.Dealer_id };
-         console.log("Dealer ID: ", user_info.Dealer_id)
-         console.log("ACCOUNT IS DEALER")
+        // Include 'type' and 'user_info.Dealer_id' in the token payload
+        tokenPayload = { email: user.email, userId: user.userid, type, dealerId: user_info?.Dealer_id };
+        console.log("Dealer ID: ", user_info.Dealer_id)
+        console.log("ACCOUNT IS DEALER")
       }
-      else
-      {
-        tokenPayload = { email: user.email, userId: user.userid, type};
+      else {
+        tokenPayload = { email: user.email, userId: user.userid, type };
         console.log("ACCOUNT IS CUSTOMER")
       }
-    
-      
+
+
 
       // Generate a JWT token
       const token = jwt.sign(tokenPayload, 'INF2003', { expiresIn: '1h' });
