@@ -8,9 +8,14 @@ import "../styles/Navbar.css";
 function Navbar() {
   const [openLinks, setOpenLinks] = useState(false);
 
+  
+
   const toggleNavbar = () => {
     setOpenLinks(!openLinks);
   };
+
+  const isLoggedIn = !!localStorage.getItem('token'); // Check if the user is logged in
+
   return (
     <div className="navbar">
       <div className="leftSide" id={openLinks ? "open" : "close"}>
@@ -27,6 +32,7 @@ function Navbar() {
         <Link to="/Posts"> Posts </Link>
         <Link to="/PostsDealerAdd"> Add Post </Link>
         <Link to="/PostsDealer"> Post Dealer </Link>
+        <Link to="/Register"> Register </Link>
         <button onClick={toggleNavbar}>
           <ReorderIcon />
         </button>

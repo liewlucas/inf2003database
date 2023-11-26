@@ -14,6 +14,9 @@ const Login = () => {
     try {
       const response = await axios.post('http://localhost:3001/api/login', { email, password });
       console.log(response.data); // handle success (response from server)
+      const { token } = response.data;
+       // Store the token in local storage
+       localStorage.setItem('token', token);
 
       // Set the success message
       setSuccessMessage('Login successful! Redirecting to the home page...');
@@ -25,6 +28,7 @@ const Login = () => {
     } catch (error) {
       console.error('Login error:', error.response ? error.response.data : error.message);
       // Handle the error, if needed
+      
     }
   };
 
@@ -37,12 +41,10 @@ const Login = () => {
           Email:
           <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
-        <br />
         <label>
           Password:
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
-        <br />
         <button type="button" onClick={handleLogin}>
           Login
         </button>
