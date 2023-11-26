@@ -92,34 +92,37 @@ app.post('/api/register', async (req, res) => {
 });
 
 // Login endpoint
-app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
+// app.post('/api/login', async (req, res) => {
+//   const { email, password } = req.body;
 
-  try {
-    await mongoClient.connect();
-    const db = mongoClient.db('inf2003');
-    const collection = db.collection('user');
+//   try {
+//     await mongoClient.connect();
+//     const db = mongoClient.db('inf2003');
+//     const collection = db.collection('user');
 
-    // Hash the provided password before comparing it with the database
-    const hashedPassword = hashPassword(password);
+//     // Hash the provided password before comparing it with the database
+//     const hashedPassword = hashPassword(password);
 
-    const user = await collection.findOne({ email, password: hashedPassword });
+//     const user = await collection.findOne({ email, password: hashedPassword });
 
-    if (user) {
-      // Generate a JWT token
-      const token = jwt.sign({ email: user.email, userId: user._id }, 'INF2003', { expiresIn: '1h' });
+//     if (user) {
+//       // Generate a JWT token
+//       const token = jwt.sign({ email: user.email, userId: user._id }, 'INF2003', { expiresIn: '1h' });
+//       console.log("LOGIN SUCCESS")
+//       res.status(200).json({ success: true, message: 'Login successful', token });
+//     } else {
+//       res.status(401).json({ success: false, message: 'Invalid credentials' });
+//     }
+//   } catch (error) {
+//     console.error('MongoDB connection error:', error);
+//     res.status(500).json({ success: false, message: 'Internal server error' });
+//   } finally {
+//     await mongoClient.close();
+//   }
+// });
 
-      res.status(200).json({ success: true, message: 'Login successful', token });
-    } else {
-      res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  } finally {
-    await mongoClient.close();
-  }
-});
+
+
 
 // New endpoint to get user details
 app.get('/api/getuserdetails', verifyToken, async (req, res) => {
@@ -142,6 +145,57 @@ app.get('/api/getuserdetails', verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   } finally {
     await client.close();
+  }
+});
+
+// Login endpoint
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    await mongoClient.connect();
+    const db = mongoClient.db('inf2003');
+    const collection = db.collection('user');
+
+    // Hash the provided password before comparing it with the database
+    const hashedPassword = hashPassword(password);
+
+    const user = await collection.findOne({ email, password: hashedPassword });
+
+    if (user) {
+      // Fetch additional user details such as 'type' and 'user_info.Dealer_id'
+      const { type, user_info } = user;
+      console.log("User Type: ", type)
+      console.log("User Info: ", user_info)
+
+      if(type == "dealer")
+      {
+        console.log("DEALER HAVE BEEN DETECTED")
+         // Include 'type' and 'user_info.Dealer_id' in the token payload
+         tokenPayload = { email: user.email, userId: user._id, type, dealerId: user_info?.Dealer_id };
+         console.log("Dealer ID: ", user_info.Dealer_id)
+         console.log("ACCOUNT IS DEALER")
+      }
+      else
+      {
+        tokenPayload = { email: user.email, userId: user._id, type };
+        console.log("ACCOUNT IS CUSTOMER")
+      }
+    
+      
+
+      // Generate a JWT token
+      const token = jwt.sign(tokenPayload, 'INF2003', { expiresIn: '1h' });
+      console.log("LOGIN SUCCESS")
+      res.status(200).json({ success: true, message: 'Login successful', token });
+    } else {
+      res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  } finally {
+    await mongoClient.close();
   }
 });
 

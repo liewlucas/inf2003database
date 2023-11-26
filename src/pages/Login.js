@@ -12,30 +12,6 @@ const Login = () => {
   const { login } = useAuth(); // Use the useAuth hook to get the login function
   const navigate = useNavigate(); // Initialize useNavigate from React Router
 
-  // const handleLogin = async () => {
-  //   try {
-  //     const response = await axios.post('http://localhost:3001/api/login', { email, password });
-  //     console.log(response.data); // handle success (response from server)
-  //     const { token } = response.data;
-
-  //     login(token); // Use the login function from the context to set the token
-
-  //      // Store the token in local storage
-  //      //localStorage.setItem('token', token);
-
-  //     // Set the success message
-  //     setSuccessMessage('Login successful! Redirecting to the home page...');
-
-  //     // Redirect to the home page after a brief delay
-  //     setTimeout(() => {
-  //       navigate('/'); // Use navigate instead of history.push
-  //     }, 2000); // 2000 milliseconds (2 seconds) delay before redirecting
-  //   } catch (error) {
-  //     console.error('Login error:', error.response ? error.response.data : error.message);
-  //     // Handle the error, if needed
-  //   }
-  // };
-
   const handleLogin = async () => {
     try {
       const response = await axios.post('http://localhost:3001/api/login', { email, password });

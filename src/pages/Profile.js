@@ -28,10 +28,10 @@ const Profile = () => {
         console.error('Error fetching user details:', error);
         setLoading(false);
 
-        // If unauthorized, redirect to the login page
-        if (error.response && error.response.status === 401) {
-          navigate('/Login');
-        }
+        // // If unauthorized, redirect to the login page
+        // if (error.response && error.response.status === 401) {
+        //   navigate('/Login');
+        // }
       }
     };
 
