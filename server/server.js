@@ -1,13 +1,16 @@
 const express = require('express');
 const { MongoClient } = require('mongodb');
 const bodyParser = require('body-parser');
-const cors = require('cors');
+const cors = require('cors'); // Import cors
+const jwt = require('jsonwebtoken');
+const verifyToken = require('./authentication'); // Import the verifyToken middleware
 const crypto = require('crypto'); // Import the crypto module
+
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(cors()); // Use the cors middleware
 app.use(bodyParser.json());
 
 const mongoURI = 'mongodb+srv://root:INF2003@clusterinf2003.k5hap9s.mongodb.net/?retryWrites=true&w=majority';
@@ -20,13 +23,61 @@ const hashPassword = (password) => {
   return hash.digest('hex');
 };
 
+
+// Registration endpoint
+app.post('/api/register', async (req, res) => {
+  const { email, password, hashKey, type, user_info } = req.body;
+
+  try {
+    await client.connect();
+    const db = client.db('inf2003');
+    const collection = db.collection('user');
+
+    // Find the latest userId in the collection
+    const latestUser = await collection.find().sort({ userId: -1 }).limit(1).toArray();
+
+    // Calculate the new userId by incrementing the latest userId
+    let newUserId = latestUser.length === 0 ? 1 : latestUser[0].userId + 1;
+
+    // Ensure newUserId is not less than 1
+    newUserId = Math.max(newUserId, 1);
+
+
+    // Hash the provided password before storing it in the database
+    const hashedPassword = hashPassword(password);
+
+    // Create a new user object
+    const newUser = {
+      userId: newUserId,
+      email,
+      password: hashedPassword,
+      hashKey,
+      type,
+      user_info,
+    };
+
+    // Insert the new user into the database
+    const result = await collection.insertOne(newUser);
+
+    res.status(201).json({ success: true, message: 'Registration successful', userId: result.insertedId });
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  } finally {
+    await client.close();
+  }
+});
+
+
+
+// Your existing login endpoint with modifications for token generation
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
     await client.connect();
     const db = client.db('inf2003');
-    const collection = db.collection('usertest');
+    const collection = db.collection('user');
 
     // Hash the provided password before comparing it with the database
     const hashedPassword = hashPassword(password);
@@ -34,7 +85,10 @@ app.post('/api/login', async (req, res) => {
     const user = await collection.findOne({ email, password: hashedPassword });
 
     if (user) {
-      res.status(200).json({ success: true, message: 'Login successful' });
+      // Generate a JWT token
+      const token = jwt.sign({ email: user.email, userId: user._id }, 'INF2003', { expiresIn: '1h' });
+
+      res.status(200).json({ success: true, message: 'Login successful', token });
     } else {
       res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
@@ -46,6 +100,41 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// Protected route example
+app.get('/api/user', verifyToken, (req, res) => {
+  // This endpoint is protected, only accessible with a valid token
+  res.json({ success: true, user: req.user });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+
+// app.post('/api/login', async (req, res) => {
+//   const { email, password } = req.body;
+
+//   try {
+//     await client.connect();
+//     const db = client.db('inf2003');
+//     const collection = db.collection('usertest');
+
+//     // Hash the provided password before comparing it with the database
+//     const hashedPassword = hashPassword(password);
+
+//     const user = await collection.findOne({ email, password: hashedPassword });
+
+//     if (user) {
+//       res.status(200).json({ success: true, message: 'Login successful' });
+//     } else {
+//       res.status(401).json({ success: false, message: 'Invalid credentials' });
+//     }
+//   } catch (error) {
+//     console.error('MongoDB connection error:', error);
+//     res.status(500).json({ success: false, message: 'Internal server error' });
+//   } finally {
+//     await client.close();
+//   }
+// });
+
+
