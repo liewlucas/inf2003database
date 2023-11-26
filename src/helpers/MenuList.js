@@ -3,7 +3,7 @@ import Carlogo from "../assets/carlogo.png";
 
 export const MenuList = [
   {
-    name: "Honda",
+    name: "Honda123",
     image: Carlogo,
     price: 15.99,
   },
