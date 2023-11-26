@@ -1,21 +1,35 @@
 import React, { useState } from 'react';
 import '../styles/PostsDealer.css';
 import { useNavigate } from 'react-router-dom';
+// useEffect(() => {
+//   const fetchCarModels = async () => {
+//     try {
+//       const response = await fetch('http://localhost:3001/api/car-models');
+//       if (response.ok) {
+//         const carModels = await response.json();
+//         setCarModels(carModels);
+//       } else {
+//         console.error('Failed to fetch car models');
+//       }
+//     } catch (error) {
+//       console.error('Error fetching car models:', error);
+//     }
+//   };
 
+//   fetchCarModels();
+// }, []);
 function AddPost() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [postTitle, setPostTitle] = useState('');
-  const [carModel, setCarModel] = useState('');
   const [quantity, setQuantity] = useState('');
   const [price, setPrice] = useState('');
   const [model, setModel] = useState('');
   const [editIndex, setEditIndex] = useState(-1);
 
-  const addNewPost = () => {
+  const addNewPost = async () => {
     if (
       postTitle.trim() !== '' &&
-      carModel.trim() !== '' &&
       quantity !== '' &&
       !isNaN(quantity) && // Check if quantity is numeric
       parseFloat(quantity) >= 0 && // Check if quantity is non-negative
@@ -24,25 +38,53 @@ function AddPost() {
       parseFloat(price) >= 0 && // Check if price is non-negative
       model !== ''
     ) {
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().split('T')[0];
       const newPost = {
-        title: postTitle,
-        carModel,
-        quantity,
-        price,
-        model
+        postTitle: postTitle,
+        cmID: model, // Use the selected model from the dropdown
+        postDate: formattedDate,
+        price: parseFloat(price),
+        quantity: parseFloat(quantity),
       };
-      const updatedPosts = [...posts, newPost];
-      setPosts(updatedPosts);
-      setPostTitle('');
-      setCarModel('');
-      setQuantity('');
-      setPrice('');
-      setModel('');
-      navigate(`/PostsDealer?posts=${encodeURIComponent(JSON.stringify(updatedPosts))}`);
+      
+  
+      try {
+        const response = await fetch('http://localhost:3001/api/posts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newPost),
+        });
+  
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Post created successfully:', result);
+          // Handle success, e.g., update state, navigate, etc.
+          const updatedPosts = [...posts, newPost];
+          setPosts(updatedPosts);
+          setPostTitle('');
+          setQuantity('');
+          setPrice('');
+          setModel('');
+          navigate(`/PostsDealer?posts=${encodeURIComponent(JSON.stringify(updatedPosts))}`);
+        } else {
+          // Handle error
+          const errorMessage = await response.text();
+          alert(`Error adding post: ${errorMessage}`);
+        }
+      } catch (error) {
+        // Handle network error
+        console.error('Error adding post:', error);
+        alert('Network error occurred. Please try again.');
+      }
     } else {
       alert('All fields are mandatory. Quantity must be a non-negative numeric value and Price must be a non-negative float value.');
     }
   };
+  
+  
 
   const deletePost = (index) => {
     const updatedPosts = [...posts];
@@ -57,7 +99,6 @@ function AddPost() {
     setEditIndex(index);
     const post = posts[index];
     setPostTitle(post.title);
-    setCarModel(post.carModel);
     setQuantity(post.quantity);
     setPrice(post.price);
     setModel(post.model);
@@ -66,7 +107,6 @@ function AddPost() {
   const cancelEditing = () => {
     setEditIndex(-1);
     setPostTitle('');
-    setCarModel('');
     setQuantity('');
     setPrice('');
     setModel('');
@@ -76,7 +116,6 @@ function AddPost() {
     const updatedPosts = [...posts];
     updatedPosts[editIndex] = {
       title: postTitle,
-      carModel,
       quantity,
       price,
       model
@@ -84,7 +123,6 @@ function AddPost() {
     setPosts(updatedPosts);
     setEditIndex(-1);
     setPostTitle('');
-    setCarModel('');
     setQuantity('');
     setPrice('');
     setModel('');
@@ -102,14 +140,7 @@ function AddPost() {
           value={postTitle}
           onChange={(e) => setPostTitle(e.target.value)}
         />
-        <label htmlFor="carModel">Car Model:</label>
-        <input
-          type="text"
-          id="carModel"
-          placeholder="Enter Car Model"
-          value={carModel}
-          onChange={(e) => setCarModel(e.target.value)}
-        />
+       
         <label htmlFor="quantity">Quantity:</label>
         <input
           type="number"
@@ -129,10 +160,18 @@ function AddPost() {
         <label htmlFor="model">Model:</label>
         <select id="model" value={model} onChange={(e) => setModel(e.target.value)}>
           <option value="">Select Model</option>
-          <option value="Model A">Model A</option>
-          <option value="Model B">Model B</option>
-          <option value="Model C">Model C</option>
+          <option value="19371">19371</option>
+          <option value="19188">19188</option>
+          <option value="19133">19133</option>
         </select>
+        {/* <select id="model" value={model} onChange={(e) => setModel(e.target.value)}>
+          <option value="">Select Model</option>
+          {carModels.map((carModel) => (
+            <option key={carModel.id} value={carModel.id}>
+              {carModel.name}
+            </option>
+          ))}
+        </select> */}
         
         {editIndex !== -1 ? (
         <>
