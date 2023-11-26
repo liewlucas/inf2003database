@@ -1,21 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/PostsDealer.css';
 import { useNavigate } from 'react-router-dom';
+
 
 function AddPost() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [postTitle, setPostTitle] = useState('');
-  const [carModel, setCarModel] = useState('');
   const [quantity, setQuantity] = useState('');
   const [price, setPrice] = useState('');
   const [model, setModel] = useState('');
   const [editIndex, setEditIndex] = useState(-1);
+  const [carModels, setCarModels] = useState([]);
+  const [modelNames, setModelNames] = useState([]);
+  useEffect(() => {
+    const fetchCarModels = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/carmodels');
+        if (response.ok) {
+          const responseData = await response.json();
 
-  const addNewPost = () => {
+          // Check if carModels is an array before using map
+          if (Array.isArray(responseData.carModels)) {
+            const cmIDs = responseData.carModels.map((carModel) => carModel.cmID);
+            const names = responseData.carModels.map((carModel) => carModel.modelName);
+
+            console.log('CMIDs:', cmIDs);
+            console.log('Model Names:', names);
+
+            setCarModels(cmIDs);
+            setModelNames(names); // Add this line to set model names in the state
+          } else {
+            console.error('Car models is not an array:', responseData.carModels);
+          }
+        } else {
+          console.error('Failed to fetch car models');
+        }
+      } catch (error) {
+        console.error('Error fetching car models:', error);
+      }
+    };
+
+    fetchCarModels();
+  }, []);
+  
+  
+  
+  
+  
+  const addNewPost = async () => {
     if (
       postTitle.trim() !== '' &&
-      carModel.trim() !== '' &&
       quantity !== '' &&
       !isNaN(quantity) && // Check if quantity is numeric
       parseFloat(quantity) >= 0 && // Check if quantity is non-negative
@@ -24,25 +59,53 @@ function AddPost() {
       parseFloat(price) >= 0 && // Check if price is non-negative
       model !== ''
     ) {
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().split('T')[0];
       const newPost = {
-        title: postTitle,
-        carModel,
-        quantity,
-        price,
-        model
+        postTitle: postTitle,
+        cmID: model, // Use the selected model from the dropdown
+        postDate: formattedDate,
+        price: parseFloat(price),
+        quantity: parseFloat(quantity),
       };
-      const updatedPosts = [...posts, newPost];
-      setPosts(updatedPosts);
-      setPostTitle('');
-      setCarModel('');
-      setQuantity('');
-      setPrice('');
-      setModel('');
-      navigate(`/PostsDealer?posts=${encodeURIComponent(JSON.stringify(updatedPosts))}`);
+      
+  
+      try {
+        const response = await fetch('http://localhost:3001/api/posts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newPost),
+        });
+  
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Post created successfully:', result);
+          // Handle success, e.g., update state, navigate, etc.
+          const updatedPosts = [...posts, newPost];
+          setPosts(updatedPosts);
+          setPostTitle('');
+          setQuantity('');
+          setPrice('');
+          setModel('');
+          navigate(`/PostsDealer?posts=${encodeURIComponent(JSON.stringify(updatedPosts))}`);
+        } else {
+          // Handle error
+          const errorMessage = await response.text();
+          alert(`Error adding post: ${errorMessage}`);
+        }
+      } catch (error) {
+        // Handle network error
+        console.error('Error adding post:', error);
+        alert('Network error occurred. Please try again.');
+      }
     } else {
       alert('All fields are mandatory. Quantity must be a non-negative numeric value and Price must be a non-negative float value.');
     }
   };
+  
+  
 
   const deletePost = (index) => {
     const updatedPosts = [...posts];
@@ -57,7 +120,6 @@ function AddPost() {
     setEditIndex(index);
     const post = posts[index];
     setPostTitle(post.title);
-    setCarModel(post.carModel);
     setQuantity(post.quantity);
     setPrice(post.price);
     setModel(post.model);
@@ -66,7 +128,6 @@ function AddPost() {
   const cancelEditing = () => {
     setEditIndex(-1);
     setPostTitle('');
-    setCarModel('');
     setQuantity('');
     setPrice('');
     setModel('');
@@ -76,7 +137,6 @@ function AddPost() {
     const updatedPosts = [...posts];
     updatedPosts[editIndex] = {
       title: postTitle,
-      carModel,
       quantity,
       price,
       model
@@ -84,7 +144,6 @@ function AddPost() {
     setPosts(updatedPosts);
     setEditIndex(-1);
     setPostTitle('');
-    setCarModel('');
     setQuantity('');
     setPrice('');
     setModel('');
@@ -102,14 +161,7 @@ function AddPost() {
           value={postTitle}
           onChange={(e) => setPostTitle(e.target.value)}
         />
-        <label htmlFor="carModel">Car Model:</label>
-        <input
-          type="text"
-          id="carModel"
-          placeholder="Enter Car Model"
-          value={carModel}
-          onChange={(e) => setCarModel(e.target.value)}
-        />
+       
         <label htmlFor="quantity">Quantity:</label>
         <input
           type="number"
@@ -127,12 +179,19 @@ function AddPost() {
           onChange={(e) => setPrice(e.target.value)}
         />
         <label htmlFor="model">Model:</label>
-        <select id="model" value={model} onChange={(e) => setModel(e.target.value)}>
+        <select id="model" value={model} onChange={(e) => setModel(parseInt(e.target.value, 10))}>
           <option value="">Select Model</option>
-          <option value="Model A">Model A</option>
-          <option value="Model B">Model B</option>
-          <option value="Model C">Model C</option>
+          {carModels.map((cmID, index) => (
+            <option key={index} value={cmID}>
+              {modelNames[index]}
+            </option>
+          ))}
         </select>
+
+
+
+
+
         
         {editIndex !== -1 ? (
         <>
@@ -144,37 +203,7 @@ function AddPost() {
         )}
       </div>
 
-        {/* Render the PostTable component */}
-        {/* <PostsDealer posts={posts} /> */}
-      {/* <PostsDealer posts={posts} startEditing={startEditing} deletePost={deletePost} /> */}
-
-      {/* <table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Car Model</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th>Model</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {posts.map((post, index) => (
-            <tr key={index}>
-              <td>{post.title}</td>
-              <td>{post.carModel}</td>
-              <td>{post.quantity}</td>
-              <td>{post.price}</td>
-              <td>{post.model}</td>
-              <td>
-                <button className="edit" onClick={() => startEditing(index)}>Edit</button>
-                <button className="delete" onClick={() => deletePost(index)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table> */}
+   
 
 
     </div>

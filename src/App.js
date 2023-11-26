@@ -1,31 +1,35 @@
+// App.js
 import './App.css';
 import Navbar from './Components/Navbar';
-import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from "./pages/Home"
 import Register from "./pages/Register"
 import Login from "./pages/Login"
+import Profile from "./pages/Profile"
 import Posts from "./pages/Posts"
 import Footer from "./Components/Footer";
 import AddPost from "./pages/PostsDealerAdd"
 import PostsDealer from "./pages/PostsDealer"
-
-
+import { AuthProvider } from './helpers/AuthContext'; // Import the AuthProvider
 
 function App() {
   return (
-    <div className="App"> 
-      <Router>
-        <Navbar/>
-        <Routes>
-          <Route path="/" exact Component={HomePage}/> 
-          <Route path="/Login" exact Component={Login}/> 
-          <Route path="/Register" exact Component={Register}/> 
-          <Route path="/Posts" exact Component={Posts}/> 
-          <Route path="/PostsDealerAdd" exact Component={AddPost}/> 
-          <Route path="/PostsDealer" exact Component={PostsDealer} />
-        </Routes>
-        <Footer/>
-      </Router>
+    <div className="App">
+      <AuthProvider> {/* Wrap your entire application with the AuthProvider */}
+        <Router>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/Login" element={<Login />} />
+            <Route path="/Register" element={<Register />} />
+            <Route path="/Posts" element={<Posts />} />
+            <Route path="/PostsDealerAdd" element={<AddPost />} />
+            <Route path="/PostsDealer" element={<PostsDealer />} />
+            <Route path="/Profile" element={<Profile />} />
+          </Routes>
+          <Footer />
+        </Router>
+      </AuthProvider>
     </div>
   );
 }
