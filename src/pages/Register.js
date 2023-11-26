@@ -16,11 +16,13 @@ const Register = () => {
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const navigate = useNavigate();
 
   const handleRegister = async () => {
     setHashKey("abc")
     setType("customer")
+    setIsButtonDisabled(true);
     try {
       const response = await axios.post('http://localhost:3001/api/register', {
         email,
@@ -35,7 +37,7 @@ const Register = () => {
           phone: parseInt(phone),
         },
       });
-
+      
       console.log(response.data); // handle success (response from server)
       setSuccessMessage('Registration successful! Redirecting to the home page...');
 
@@ -45,6 +47,9 @@ const Register = () => {
     } catch (error) {
       console.error('Registration error:', error.response ? error.response.data : error.message);
     }
+    finally {
+        setIsButtonDisabled(false); // Enable the button after the operation is complete
+      }
   };
 
   return (
@@ -81,7 +86,7 @@ const Register = () => {
           Phone Number:
           <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </label>
-        <button type="button" onClick={handleRegister}>
+        <button type="button" onClick={handleRegister} disabled={isButtonDisabled}>
           Register
         </button>
       </form>
