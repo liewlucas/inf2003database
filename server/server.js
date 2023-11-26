@@ -50,7 +50,7 @@ app.post('/api/register', async (req, res) => {
     console.log('latestuser:', latestUser);
 
     if (latestUser.length > 0) {
-      newUserId = latestUser[0].userid+1;
+      newUserId = latestUser[0].userid + 1;
       console.log("Latest UserId:  ", newUserId)
     }
 
@@ -203,6 +203,7 @@ app.get('/api/carmodels', async (req, res) => {
   }
 });
 app.get('/api/post', async (req, res) => {
+
   try {
     // Get a connection from the pool
     const connection = await pool.getConnection();
@@ -225,22 +226,14 @@ app.get('/api/post', async (req, res) => {
 });
 app.put('/api/posts/:postId', async (req, res) => {
   const postId = req.params.postId;
-  const { postTitle, cmID, postDate, price, quantity } = req.body;
+  const { postTitle, cmID, price, quantity, dealerID } = req.body;
+  
+  // Hardcode the current time
+  const currentDate = new Date();
+  const formattedDate = currentDate.toISOString().split('T')[0]; // Format as "YYYY-MM-DD"
 
   try {
     console.log('Decoded Token Payload:', req.user);
-    // If authentication is not required, you can handle the dealerID in a different way
-    const dealerID = 2299;
-
-    // Create an updated post object
-    const updatedPost = {
-      postTitle,
-      cmID,
-      postDate,
-      price,
-      quantity,
-      dealerID,
-    };
 
     // Get a connection from the pool
     const connection = await pool.getConnection();
@@ -249,7 +242,7 @@ app.put('/api/posts/:postId', async (req, res) => {
       // Update the post in the database
       const [result] = await connection.query(
         'UPDATE post SET postTitle=?, cmID=?, postDate=?, price=?, quantity=?, dealerID=? WHERE postID=?',
-        [updatedPost.postTitle, updatedPost.cmID, updatedPost.postDate, updatedPost.price, updatedPost.quantity, updatedPost.dealerID, postId]
+        [postTitle, cmID, formattedDate, price, quantity, dealerID, postId]
       );
 
       if (result.affectedRows > 0) {
@@ -267,6 +260,9 @@ app.put('/api/posts/:postId', async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
 });
+
+
+
 // Delete post endpoint
 app.delete('/api/posts/:postId', async (req, res) => {
   const postId = req.params.postId;
@@ -338,15 +334,34 @@ app.post('/api/posts', async (req, res) => {
 
 app.get('/api/post/:dealerID', async (req, res) => {
   try {
-    // Get cmID from the route parameters
-    const dealerID = 2299;
+    // Get dealerID from the route parameters
+    const dealerID = req.params.dealerID;
 
     // Get a connection from the pool
     const connection = await pool.getConnection();
 
     try {
-      // Fetch the posts based on cmID from the database
-      const [rows] = await connection.query('SELECT * FROM post WHERE dealerID = ?', [dealerID]);
+      // Fetch the posts based on dealerID from the database, ordered by postDate in descending order and limited to 10 records
+      const [rows] = await connection.query(`
+      SELECT
+      post.postID,
+      post.postTitle,
+      post.cmID,
+      carmodel.modelName,
+      post.dealerID,
+      post.postDate,
+      post.price,
+      post.quantity
+    FROM
+      post
+    JOIN
+      carmodel ON post.cmID = carmodel.cmID
+    WHERE
+      dealerID = ?
+    ORDER BY
+      post.postDate DESC
+    LIMIT 10
+      `, [dealerID]);
 
       // Send the posts as a JSON response
       res.status(200).json({ success: true, data: rows });
@@ -362,11 +377,12 @@ app.get('/api/post/:dealerID', async (req, res) => {
 });
 
 
+
 app.get('/api/totalSalesByRegion', async (req, res) => {
   try {
     // Get a connection from the pool
     const connection = await pool.getConnection();
- 
+
     try {
       // Execute the top models query
       const [rows] = await connection.query(`
@@ -386,7 +402,7 @@ app.get('/api/totalSalesByRegion', async (req, res) => {
     ORDER BY
       totalSales DESC;
       `);
- 
+
       // Send the result as a JSON response
       res.status(200).json({ success: true, totalSalesByRegion: rows });
     } finally {
@@ -394,7 +410,7 @@ app.get('/api/totalSalesByRegion', async (req, res) => {
     }
   } catch (error) {
     console.error('Error:', error);
- 
+
     // Send a JSON error response
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
@@ -404,7 +420,7 @@ app.get('/api/minavgmax', async (req, res) => {
   try {
     // Get a connection from the pool
     const connection = await pool.getConnection();
- 
+
     try {
       // Execute the top models query
       const [rows] = await connection.query(`
@@ -414,7 +430,7 @@ app.get('/api/minavgmax', async (req, res) => {
       JOIN inf2003.carmodel ON carmodel.cmID = post.postID
       LIMIT 1;
       `);
- 
+
       // Send the result as a JSON response
       res.status(200).json({ success: true, minavgmax: rows });
     } finally {
@@ -422,7 +438,7 @@ app.get('/api/minavgmax', async (req, res) => {
     }
   } catch (error) {
     console.error('Error:', error);
- 
+
     // Send a JSON error response
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
@@ -432,7 +448,7 @@ app.get('/api/topmodels', async (req, res) => {
   try {
     // Get a connection from the pool
     const connection = await pool.getConnection();
- 
+
     try {
       // Execute the top models query
       const [rows] = await connection.query(`
@@ -444,7 +460,7 @@ app.get('/api/topmodels', async (req, res) => {
         ORDER BY totalSales DESC
         LIMIT 5
       `);
- 
+
       // Send the result as a JSON response
       res.status(200).json({ success: true, topModels: rows });
     } finally {
@@ -452,7 +468,7 @@ app.get('/api/topmodels', async (req, res) => {
     }
   } catch (error) {
     console.error('Error:', error);
- 
+
     // Send a JSON error response
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
@@ -462,7 +478,7 @@ app.get('/api/topdealers', async (req, res) => {
   try {
     // Get a connection from the pool
     const connection = await pool.getConnection();
- 
+
     try {
       // Execute the top models query
       const [rows] = await connection.query(`
@@ -471,7 +487,7 @@ app.get('/api/topdealers', async (req, res) => {
       inner join inf2003.carsales s on s.postID = p.postID
       group by Price,name limit 5;
       `);
- 
+
       // Send the result as a JSON response
       res.status(200).json({ success: true, topdealers: rows });
     } finally {
@@ -479,7 +495,7 @@ app.get('/api/topdealers', async (req, res) => {
     }
   } catch (error) {
     console.error('Error:', error);
- 
+
     // Send a JSON error response
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
