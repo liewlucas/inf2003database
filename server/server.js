@@ -172,13 +172,13 @@ app.post('/api/login', async (req, res) => {
       {
         console.log("DEALER HAVE BEEN DETECTED")
          // Include 'type' and 'user_info.Dealer_id' in the token payload
-         tokenPayload = { email: user.email, userId: user._id, type, dealerId: user_info?.Dealer_id };
+         tokenPayload = { email: user.email, userId: user.userid, type, dealerId: user_info?.Dealer_id };
          console.log("Dealer ID: ", user_info.Dealer_id)
          console.log("ACCOUNT IS DEALER")
       }
       else
       {
-        tokenPayload = { email: user.email, userId: user._id, type };
+        tokenPayload = { email: user.email, userId: user.userid, type};
         console.log("ACCOUNT IS CUSTOMER")
       }
     

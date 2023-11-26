@@ -10,9 +10,10 @@ import jwt from 'jsonwebtoken';
 
 function Navbar() {
   const [openLinks, setOpenLinks] = useState(false);
-  const { token, logout } = useAuth();
+  const {token} = useAuth();
   const [isLoggedIn, setIsLoggedIn] = useState(!!token);
   const [userType, setUserType] = useState(null);
+  const [userID, setUserID] = useState(null);
   let isDealer = false;
 
   useEffect(() => {
@@ -27,6 +28,8 @@ function Navbar() {
   if (token) {
     const decodedToken = jwt.decode(token);
     if (decodedToken) {
+      setUserID(decodedToken.userId)
+      console.log("USER ID: ", decodedToken.userId)
       console.log("USER TYPE: ", decodedToken.type)
       setUserType(decodedToken.type);
     }
