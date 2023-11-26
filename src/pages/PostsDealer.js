@@ -22,7 +22,7 @@ function PostsDealer({ startEditing, deletePost }) {
         <thead>
           <tr>
             <th>Title</th>
-            <th>Car Model</th>
+        
             <th>Quantity</th>
             <th>Price</th>
             <th>Model</th>
@@ -32,11 +32,11 @@ function PostsDealer({ startEditing, deletePost }) {
         <tbody>
           {posts.map((post, index) => (
             <tr key={index}>
-              <td>{}</td>
-              <td>{}</td>
-              <td>{}</td>
-              <td>{}</td>
-              <td>{}</td>
+              <td>{post.postTitle}</td>
+      
+              <td>{post.quantity}</td>
+              <td>{post.price}</td>
+              <td>{post.model}</td>
               <td>
                 <button className="edit" onClick={() => startEditing(index)}>Edit</button>
                 <button className="delete" onClick={() => deletePost(index)}>Delete</button>
