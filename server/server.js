@@ -43,19 +43,33 @@ app.post('/api/register', async (req, res) => {
     const db = mongoClient.db('inf2003');
     const collection = db.collection('user');
 
-    // Find the latest userId in the collection
-    const latestUser = await collection.find().sort({ userId: -1 }).limit(1).toArray();
+
+    // let newUserId = 1;
+
+    const latestUser = await collection.find().sort({ _id: -1 }).limit(1).toArray();
+    console.log('latestuser:', latestUser);
+
+    if (latestUser.length > 0) {
+      newUserId = latestUser[0].userid+1;
+      console.log("Latest UserId:  ", newUserId)
+    }
 
     // Calculate the new userId by incrementing the latest userId
     let newUserId = latestUser.length === 0 ? 1 : latestUser[0].userId + 1;
     newUserId = Math.max(newUserId, 1);
+    // newUserId = latestUser.length === 0 ? 1 : parseInt(latestUser[0].userId) + 1;
+
+    // // Ensure newUserId is not less than 1
+    // newUserId = Math.max(newUserId, 1);
+
 
     // Hash the provided password before storing it in the database
     const hashedPassword = hashPassword(password);
 
+
     // Create a new user object
     const newUser = {
-      userId: newUserId,
+      userid: newUserId,
       email,
       password: hashedPassword,
       hashKey,
@@ -67,6 +81,8 @@ app.post('/api/register', async (req, res) => {
     const result = await collection.insertOne(newUser);
 
     res.status(201).json({ success: true, message: 'Registration successful', userId: result.insertedId });
+    console.log('New User ID:', newUserId);
+
   } catch (error) {
     console.error('MongoDB connection error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -102,6 +118,54 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   } finally {
     await mongoClient.close();
+  }
+});
+
+// New endpoint to get user details
+app.get('/api/getuserdetails', verifyToken, async (req, res) => {
+  try {
+    await client.connect();
+    const db = client.db('inf2003');
+    const collection = db.collection('user');
+
+    // Fetch user details from the database using the userId from the token
+    const userDetails = await collection.findOne({ _id: req.user.userId });
+
+    if (userDetails) {
+      // Send the user details to the client
+      res.json({ success: true, userDetails });
+    } else {
+      res.status(404).json({ success: false, message: 'User details not found' });
+    }
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  } finally {
+    await client.close();
+  }
+});
+
+// New endpoint to get user details
+app.get('/api/getuserdetails', verifyToken, async (req, res) => {
+  try {
+    await client.connect();
+    const db = client.db('inf2003');
+    const collection = db.collection('user');
+
+    // Fetch user details from the database using the userId from the token
+    const userDetails = await collection.findOne({ _id: req.user.userId });
+
+    if (userDetails) {
+      // Send the user details to the client
+      res.json({ success: true, userDetails });
+    } else {
+      res.status(404).json({ success: false, message: 'User details not found' });
+    }
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  } finally {
+    await client.close();
   }
 });
 
