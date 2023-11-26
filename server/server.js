@@ -50,7 +50,7 @@ app.post('/api/register', async (req, res) => {
     console.log('latestuser:', latestUser);
 
     if (latestUser.length > 0) {
-      newUserId = latestUser[0].userid+1;
+      newUserId = latestUser[0].userid + 1;
       console.log("Latest UserId:  ", newUserId)
     }
 
@@ -240,19 +240,27 @@ app.get('/api/topmodels', async (req, res) => {
   try {
     // Get a connection from the pool
     const connection = await pool.getConnection();
- 
+
     try {
       // Execute the top models query
       const [rows] = await connection.query(`
-        SELECT carmodel.cmID, carmodel.modelName, SUM(quantity) as totalSales
-        FROM carsales
-        JOIN post ON carsales.postID = post.postID
-        JOIN carmodel ON post.cmID = carmodel.cmID
-        GROUP BY carmodel.cmID, carmodel.modelName
-        ORDER BY totalSales DESC
-        LIMIT 5
+      SELECT
+        carmodel.cmID,
+        carmodel.modelName,
+        COUNT(carsales.csID) AS totalSales
+      FROM
+        inf2003.carsales
+      JOIN
+          inf2003.post ON carsales.postID = post.postID
+      JOIN
+          inf2003.carmodel ON post.cmID = carmodel.cmID
+      GROUP BY
+          carmodel.cmID, carmodel.modelName
+      ORDER BY
+          totalSales DESC
+      LIMIT 5;
       `);
- 
+
       // Send the result as a JSON response
       res.status(200).json({ success: true, topModels: rows });
     } finally {
@@ -260,7 +268,7 @@ app.get('/api/topmodels', async (req, res) => {
     }
   } catch (error) {
     console.error('Error:', error);
- 
+
     // Send a JSON error response
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
@@ -270,7 +278,7 @@ app.get('/api/topdealers', async (req, res) => {
   try {
     // Get a connection from the pool
     const connection = await pool.getConnection();
- 
+
     try {
       // Execute the top models query
       const [rows] = await connection.query(`
@@ -279,7 +287,7 @@ app.get('/api/topdealers', async (req, res) => {
       inner join inf2003.carsales s on s.postID = p.postID
       group by Price,name limit 5;
       `);
- 
+
       // Send the result as a JSON response
       res.status(200).json({ success: true, topdealers: rows });
     } finally {
@@ -287,7 +295,7 @@ app.get('/api/topdealers', async (req, res) => {
     }
   } catch (error) {
     console.error('Error:', error);
- 
+
     // Send a JSON error response
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
