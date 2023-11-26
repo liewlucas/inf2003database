@@ -145,29 +145,7 @@ app.get('/api/getuserdetails', verifyToken, async (req, res) => {
   }
 });
 
-// New endpoint to get user details
-app.get('/api/getuserdetails', verifyToken, async (req, res) => {
-  try {
-    await client.connect();
-    const db = client.db('inf2003');
-    const collection = db.collection('user');
 
-    // Fetch user details from the database using the userId from the token
-    const userDetails = await collection.findOne({ _id: req.user.userId });
-
-    if (userDetails) {
-      // Send the user details to the client
-      res.json({ success: true, userDetails });
-    } else {
-      res.status(404).json({ success: false, message: 'User details not found' });
-    }
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  } finally {
-    await client.close();
-  }
-});
 
 // Protected route example
 app.get('/api/user', verifyToken, (req, res) => {
