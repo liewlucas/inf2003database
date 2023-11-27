@@ -5,7 +5,6 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from "./pages/Home"
 import Register from "./pages/Register"
 import Login from "./pages/Login"
-import Profile from "./pages/Profile"
 import Posts from "./pages/Posts"
 import Footer from "./Components/Footer";
 import AddPost from "./pages/PostsDealerAdd"
@@ -25,7 +24,6 @@ function App() {
             <Route path="/Posts" element={<Posts />} />
             <Route path="/PostsDealerAdd" element={<AddPost />} />
             <Route path="/PostsDealer" element={<PostsDealer />} />
-            <Route path="/Profile" element={<Profile />} />
           </Routes>
           <Footer />
         </Router>

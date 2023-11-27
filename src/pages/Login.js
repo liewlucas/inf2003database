@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/Login.css';
 import Logo from "../assets/loginlogo.png";
 import { useAuth } from '../helpers/AuthContext';
+// using auth token to authenticate
 
 const Login = () => {
   const [email, setEmail] = useState('');
