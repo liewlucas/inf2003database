@@ -254,6 +254,35 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+app.get('/api/topmodels', async (req, res) => {
+  try {
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+
+    try {
+      // Execute the top models query
+      const [rows] = await connection.query(`
+        SELECT carmodel.cmID, carmodel.modelName, SUM(quantity) as totalSales
+        FROM carsales
+        JOIN post ON carsales.postID = post.postID
+        JOIN carmodel ON post.cmID = carmodel.cmID
+        GROUP BY carmodel.cmID, carmodel.modelName
+        ORDER BY totalSales DESC
+        LIMIT 5
+      `);
+
+      // Send the result as a JSON response
+      res.status(200).json({ success: true, topModels: rows });
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
 
 
 // Protected route example
@@ -283,6 +312,7 @@ app.get('/api/carmodels', async (req, res) => {
   }
 });
 app.get('/api/post', async (req, res) => {
+
   try {
     // Get a connection from the pool
     const connection = await pool.getConnection();
@@ -293,6 +323,72 @@ app.get('/api/post', async (req, res) => {
 
       // Send the posts as a JSON response
       res.status(200).json({ success: true, data: rows });
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
+app.put('/api/posts/:postId', async (req, res) => {
+  const postId = req.params.postId;
+  const { postTitle, cmID, price, quantity, dealerID } = req.body;
+  
+  // Hardcode the current time
+  const currentDate = new Date();
+  const formattedDate = currentDate.toISOString().split('T')[0]; // Format as "YYYY-MM-DD"
+
+  try {
+    console.log('Decoded Token Payload:', req.user);
+
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+
+    try {
+      // Update the post in the database
+      const [result] = await connection.query(
+        'UPDATE post SET postTitle=?, cmID=?, postDate=?, price=?, quantity=?, dealerID=? WHERE postID=?',
+        [postTitle, cmID, formattedDate, price, quantity, dealerID, postId]
+      );
+
+      if (result.affectedRows > 0) {
+        res.status(200).json({ success: true, message: 'Post updated successfully' });
+      } else {
+        res.status(404).json({ success: false, message: 'Post not found' });
+      }
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
+
+
+
+// Delete post endpoint
+app.delete('/api/posts/:postId', async (req, res) => {
+  const postId = req.params.postId;
+
+  try {
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+
+    try {
+      // Delete the post from the database
+      const [result] = await connection.query('DELETE FROM post WHERE postID = ?', [postId]);
+
+      if (result.affectedRows > 0) {
+        res.status(200).json({ success: true, message: 'Post deleted successfully' });
+      } else {
+        res.status(404).json({ success: false, message: 'Post not found' });
+      }
     } finally {
       connection.release(); // Release the connection back to the pool
     }
@@ -345,6 +441,174 @@ app.post('/api/posts', async (req, res) => {
   }
 });
 
+app.get('/api/post/:dealerID', async (req, res) => {
+  try {
+    // Get dealerID from the route parameters
+    const dealerID = req.params.dealerID;
+
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+
+    try {
+      // Fetch the posts based on dealerID from the database, ordered by postDate in descending order and limited to 10 records
+      const [rows] = await connection.query(`
+      SELECT
+      post.postID,
+      post.postTitle,
+      post.cmID,
+      carmodel.modelName,
+      post.dealerID,
+      post.postDate,
+      post.price,
+      post.quantity
+    FROM
+      post
+    JOIN
+      carmodel ON post.cmID = carmodel.cmID
+    WHERE
+      dealerID = ?
+    ORDER BY
+      post.postDate DESC
+    LIMIT 10
+      `, [dealerID]);
+
+      // Send the posts as a JSON response
+      res.status(200).json({ success: true, data: rows });
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
+
+
+
+app.get('/api/totalSalesByRegion', async (req, res) => {
+  try {
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+
+    try {
+      // Execute the top models query
+      const [rows] = await connection.query(`
+      SELECT
+      dealer.region,
+      COUNT(carsales.csID) AS totalSales
+    FROM
+      inf2003.carsales
+    JOIN
+      inf2003.post ON carsales.postID = post.postID
+    JOIN
+      inf2003.carmodel ON post.cmID = carmodel.cmID
+    JOIN
+      inf2003.dealer ON dealer.dealerID = post.dealerID
+    GROUP BY
+      dealer.region
+    ORDER BY
+      totalSales DESC;
+      `);
+
+      // Send the result as a JSON response
+      res.status(200).json({ success: true, totalSalesByRegion: rows });
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
+
+app.get('/api/minavgmax', async (req, res) => {
+  try {
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+
+    try {
+      // Execute the top models query
+      const [rows] = await connection.query(`
+      SELECT MIN(price) AS min_price, AVG(price) AS avg_price, MAX(price) AS max_price
+      FROM inf2003.carsales
+      JOIN inf2003.post ON carsales.postID = post.postID
+      JOIN inf2003.carmodel ON carmodel.cmID = post.postID
+      LIMIT 1;
+      `);
+
+      // Send the result as a JSON response
+      res.status(200).json({ success: true, minavgmax: rows });
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
+
+app.get('/api/topmodels', async (req, res) => {
+  try {
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+
+    try {
+      // Execute the top models query
+      const [rows] = await connection.query(`
+        SELECT carmodel.cmID, carmodel.modelName, SUM(quantity) as totalSales
+        FROM carsales
+        JOIN post ON carsales.postID = post.postID
+        JOIN carmodel ON post.cmID = carmodel.cmID
+        GROUP BY carmodel.cmID, carmodel.modelName
+        ORDER BY totalSales DESC
+        LIMIT 5
+      `);
+
+      // Send the result as a JSON response
+      res.status(200).json({ success: true, topModels: rows });
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
+
+app.get('/api/topdealers', async (req, res) => {
+  try {
+    // Get a connection from the pool
+    const connection = await pool.getConnection();
+
+    try {
+      // Execute the top models query
+      const [rows] = await connection.query(`
+      select d.dealerName as name, sum(price) as Total from inf2003.dealer d
+      inner join inf2003.post p on p.dealerID = d.dealerID
+      inner join inf2003.carsales s on s.postID = p.postID
+      group by Price,name limit 5;
+      `);
+
+      // Send the result as a JSON response
+      res.status(200).json({ success: true, topdealers: rows });
+    } finally {
+      connection.release(); // Release the connection back to the pool
+    }
+  } catch (error) {
+    console.error('Error:', error);
+
+    // Send a JSON error response
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
+});
 
 
 app.listen(PORT, () => {

@@ -1,0 +1,23 @@
+/* Home.css */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .grid-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    width: 100%;
+  }
+  
+  .grid-item {
+    width: 48%;
+    margin-bottom: 20px;
+  }
+  
+  .chart-item {
+    width: 100%;
+  }
+  
