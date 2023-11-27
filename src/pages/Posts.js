@@ -78,6 +78,8 @@ function Posts() {
               image="https://media.istockphoto.com/id/1150931120/photo/3d-illustration-of-generic-compact-white-car-front-side-view.jpg?s=612x612&w=0&k=20&c=MkM3U9ruXp2wKCgYKeL6DyZ9H5WFIHtyRWsbOMokrFg="
               name={<p style={{ fontSize: '30px' }}>{post.postTitle}</p>}
               price={`${post.price},000`} // Assuming 'price' is a property in your post object
+              name={post.postTitle}
+              price={post.price*1000}// Assuming 'price' is a property in your post object
             />
           </div>
         ))}
@@ -86,7 +88,7 @@ function Posts() {
       {selectedPost && (
         <div className="postDetails">
           <h2>{selectedPost.postTitle}</h2>
-          <p>Price: {selectedPost.price}</p>
+          <p>Price: {selectedPost.price},000</p>
           {/* Add other details as needed */}
         </div>
       )}
