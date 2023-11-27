@@ -34,6 +34,36 @@ const hashPassword = (password) => {
   return hash.digest('hex');
 };
 
+app.post('/api/addhistory', async (req, res) => {
+  const { userid, viewed_history } = req.body;
+
+  try {
+    await mongoClient.connect();
+    const db = mongoClient.db('inf2003');
+    const collection = db.collection('user');
+
+    // Check if the user with the provided userid exists
+    const existingUser = await collection.findOne({ userid: userid });
+
+    if (!existingUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Add or update the viewed_history field
+    await collection.updateOne(
+      { userid: userid },
+      { $set: { viewed_history } },
+    );
+
+    res.json({ success: true, message: 'Viewed history added successfully' });
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  } finally {
+    await mongoClient.close();
+  }
+});
+
 // Registration endpoint
 app.post('/api/register', async (req, res) => {
   const { email, password, hashKey, type, user_info } = req.body;
@@ -55,9 +85,9 @@ app.post('/api/register', async (req, res) => {
     }
 
     // Calculate the new userId by incrementing the latest userId
-    let newUserId = latestUser.length === 0 ? 1 : latestUser[0].userId + 1;
-    newUserId = Math.max(newUserId, 1);
-    // newUserId = latestUser.length === 0 ? 1 : parseInt(latestUser[0].userId) + 1;
+    // let newUserId = latestUser.length === 0 ? 1 : latestUser[0].userId + 1;
+    // newUserId = Math.max(newUserId, 1);
+    // // newUserId = latestUser.length === 0 ? 1 : parseInt(latestUser[0].userId) + 1;
 
     // // Ensure newUserId is not less than 1
     // newUserId = Math.max(newUserId, 1);
@@ -92,6 +122,90 @@ app.post('/api/register', async (req, res) => {
 });
 
 // Login endpoint
+// app.post('/api/login', async (req, res) => {
+//   const { email, password } = req.body;
+
+//   try {
+//     await mongoClient.connect();
+//     const db = mongoClient.db('inf2003');
+//     const collection = db.collection('user');
+
+//     // Hash the provided password before comparing it with the database
+//     const hashedPassword = hashPassword(password);
+
+//     const user = await collection.findOne({ email, password: hashedPassword });
+
+//     if (user) {
+//       // Generate a JWT token
+//       const token = jwt.sign({ email: user.email, userId: user._id }, 'INF2003', { expiresIn: '1h' });
+//       console.log("LOGIN SUCCESS")
+//       res.status(200).json({ success: true, message: 'Login successful', token });
+//     } else {
+//       res.status(401).json({ success: false, message: 'Invalid credentials' });
+//     }
+//   } catch (error) {
+//     console.error('MongoDB connection error:', error);
+//     res.status(500).json({ success: false, message: 'Internal server error' });
+//   } finally {
+//     await mongoClient.close();
+//   }
+// });
+
+
+// New endpoint to get user details
+app.get('/api/getuserdetails', verifyToken, async (req, res) => {
+  const { userid } = req.query;
+
+  try {
+    // Connect to MongoDB
+    await mongoClient.connect();
+    
+    const db = mongoClient.db('inf2003');
+    const collection = db.collection('user');
+
+    // Check if the user with the provided userid exists
+    const existingUser = await collection.findOne({ userid: userid });
+
+    if (!existingUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    console.log(existingUser);
+
+    // Send the user details to the client
+    res.json({ success: true, userDetails: existingUser });
+  } catch (error) {
+    console.error('MongoDB operation error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  } finally {
+    // Close the MongoDB connection
+    await mongoClient.close();
+  }
+});
+
+  // try {
+  //   await client.connect();
+  //   const db = client.db('inf2003');
+  //   const collection = db.collection('user');
+
+  //   // Fetch user details from the database using the userId from the token
+  //   const userDetails = await collection.findOne({ _id: req.user.userId });
+
+  //   if (userDetails) {
+  //     // Send the user details to the client
+  //     res.json({ success: true, userDetails });
+  //   } else {
+  //     res.status(404).json({ success: false, message: 'User details not found' });
+  //   }
+  // } catch (error) {
+  //   console.error('MongoDB connection error:', error);
+  //   res.status(500).json({ success: false, message: 'Internal server error' });
+  // } finally {
+  //   await client.close();
+  // }
+
+
+// Login endpoint
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -106,9 +220,28 @@ app.post('/api/login', async (req, res) => {
     const user = await collection.findOne({ email, password: hashedPassword });
 
     if (user) {
-      // Generate a JWT token
-      const token = jwt.sign({ email: user.email, userId: user._id }, 'INF2003', { expiresIn: '1h' });
+      // Fetch additional user details such as 'type' and 'user_info.Dealer_id'
+      const { type, user_info } = user;
+      console.log("User Type: ", type)
+      console.log("User Info: ", user_info)
 
+      if (type == "dealer") {
+        console.log("DEALER HAVE BEEN DETECTED")
+        // Include 'type' and 'user_info.Dealer_id' in the token payload
+        tokenPayload = { email: user.email, userId: user.userid, type, dealerId: user_info?.Dealer_id };
+        console.log("Dealer ID: ", user_info.Dealer_id)
+        console.log("ACCOUNT IS DEALER")
+      }
+      else {
+        tokenPayload = { email: user.email, userId: user.userid, type };
+        console.log("ACCOUNT IS CUSTOMER")
+      }
+
+
+
+      // Generate a JWT token
+      const token = jwt.sign(tokenPayload, 'INF2003', { expiresIn: '1h' });
+      console.log("LOGIN SUCCESS")
       res.status(200).json({ success: true, message: 'Login successful', token });
     } else {
       res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -118,30 +251,6 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   } finally {
     await mongoClient.close();
-  }
-});
-
-// New endpoint to get user details
-app.get('/api/getuserdetails', verifyToken, async (req, res) => {
-  try {
-    await client.connect();
-    const db = client.db('inf2003');
-    const collection = db.collection('user');
-
-    // Fetch user details from the database using the userId from the token
-    const userDetails = await collection.findOne({ _id: req.user.userId });
-
-    if (userDetails) {
-      // Send the user details to the client
-      res.json({ success: true, userDetails });
-    } else {
-      res.status(404).json({ success: false, message: 'User details not found' });
-    }
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  } finally {
-    await client.close();
   }
 });
 

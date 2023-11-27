@@ -1,14 +1,12 @@
-// Register.js
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import '../styles/Register.css'; // Import the CSS file
+import '../styles/Register.css';
 
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [hashKey, setHashKey] = useState('abc'); // Assuming 'abc' is the default hash key
+  const [hashKey, setHashKey] = useState('abc');
   const [type, setType] = useState('customer');
   const [annualIncome, setAnnualIncome] = useState('');
   const [gender, setGender] = useState('');
@@ -20,9 +18,10 @@ const Register = () => {
   const navigate = useNavigate();
 
   const handleRegister = async () => {
-    setHashKey("abc")
-    setType("customer")
+    setHashKey('abc');
+    setType('customer');
     setIsButtonDisabled(true);
+
     try {
       const response = await axios.post('http://localhost:3001/api/register', {
         email,
@@ -37,8 +36,8 @@ const Register = () => {
           phone: parseInt(phone),
         },
       });
-      
-      console.log(response.data); // handle success (response from server)
+
+      console.log(response.data);
       setSuccessMessage('Registration successful! Redirecting to the home page...');
 
       setTimeout(() => {
@@ -46,10 +45,9 @@ const Register = () => {
       }, 2000);
     } catch (error) {
       console.error('Registration error:', error.response ? error.response.data : error.message);
+    } finally {
+      setIsButtonDisabled(false);
     }
-    finally {
-        setIsButtonDisabled(false); // Enable the button after the operation is complete
-      }
   };
 
   return (
@@ -64,10 +62,8 @@ const Register = () => {
           Password:
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
-        {/* Add more input fields for other registration details */}
-        {/* ... */}
         <label>
-          AnnualIncome:
+          Annual Income:
           <input type="text" value={annualIncome} onChange={(e) => setAnnualIncome(e.target.value)} />
         </label>
         <label>
@@ -87,7 +83,7 @@ const Register = () => {
           <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </label>
         <button type="button" onClick={handleRegister} disabled={isButtonDisabled}>
-          Register
+          {isButtonDisabled ? 'Registering...' : 'Register'}
         </button>
       </form>
 
