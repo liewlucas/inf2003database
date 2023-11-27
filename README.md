@@ -1,8 +1,62 @@
+Instructions: 
+
+MySQL Workbench Connection:
+Connection Name: INF2003DB 
+Hostname: 35.247.119.23 
+Username: root
+Password: inf2003@SIT
+
+MONGODB: 
+1. Register an account at MongoDB Atlas: https://www.mongodb.com/cloud/atlas/register
+2. Share the DB to through the email of the registered account.
+3. An invitation email will be sent.
+4. Follow the steps above.
+5. Copy the link. Replace the password with : INF2003
+6. DB Setup.
+Kindly email Ke Yi for access to the database: 2202733@sit.singaporetech.edu.sg
+
+
+React Connection:
+npm install
+npm install cors
+npm install axios
+npm install crypto-browserify stream-browserify process
+npm install buffer crypto-browserify stream-browserify util
+npm install crypto-browserify stream-browserify
+npm install react-app-rewired --save-dev
+npm install jsonwebtoken
+
+*if permission denied:
+chmod +x “File Directory”*
+npm start
+
+
+Server Connection: 
+cd server
+npm install
+npm install --save-dev nodemon
+npm install lru-cache –save
+npm start
+*Run server concurrently with the react app*
+
+
+Test Accounts: 
+
+Dealer Account:
+email:dealertest@car-sal.es
+password: Geraldine
+
+
+User Account:
+email:test2@gmail.com 
+password: 1234
+
+-------------------------------------------------------------------------------------------------------------------------
+
 # Getting Started with Create React App
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
-
 In the project directory, you can run:
 
 ### `npm start`
